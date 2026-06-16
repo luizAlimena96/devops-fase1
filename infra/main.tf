@@ -65,7 +65,7 @@ resource "aws_security_group" "api" {
   tags = local.common_tags
 }
 
-# IAM role que permite a EC2 puxar imagens do ECR
+# IAM role que permite a EC2 puxar imagens do ECR e ser gerenciada via SSM
 resource "aws_iam_role" "ec2" {
   name = "${var.project_name}-ec2-role"
 
@@ -81,9 +81,16 @@ resource "aws_iam_role" "ec2" {
   tags = local.common_tags
 }
 
+# Leitura do ECR (baixar imagens)
 resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   role       = aws_iam_role.ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+# NOVO NA FASE 2: habilita o SSM Agent a receber comandos do pipeline de CD
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "ec2" {
@@ -101,6 +108,7 @@ resource "aws_instance" "api" {
   user_data = templatefile("${path.module}/user_data.sh", {
     aws_region     = var.aws_region
     ecr_repository = aws_ecr_repository.api.repository_url
+    ecr_registry   = split("/", aws_ecr_repository.api.repository_url)[0]
     app_port       = var.app_port
   })
 

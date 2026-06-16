@@ -6,6 +6,11 @@ dnf update -y
 dnf install -y docker
 systemctl enable --now docker
 
+# Garante o SSM Agent (necessario para o deploy via CD). Em AMIs "minimal" do
+# AL2023 ele nao vem pre-instalado; nas standard ja vem (instalacao idempotente).
+dnf install -y amazon-ssm-agent || true
+systemctl enable --now amazon-ssm-agent || true
+
 # Instala o plugin do Docker Compose (orquestracao do container no host)
 mkdir -p /usr/local/lib/docker/cli-plugins
 curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \

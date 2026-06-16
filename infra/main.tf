@@ -5,14 +5,16 @@ locals {
   }
 }
 
-# AMI mais recente do Amazon Linux 2023
+# AMI mais recente do Amazon Linux 2023 (standard, nao a "minimal").
+# A variante minimal nao traz o SSM Agent pre-instalado, o que quebraria o
+# deploy via SSM; o padrao "al2023-ami-2023.*" exclui as imagens minimal.
 data "aws_ami" "al2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {
